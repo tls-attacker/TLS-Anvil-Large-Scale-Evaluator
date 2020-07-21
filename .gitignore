@@ -11,3 +11,6 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 *.iml
 .idea/
+output/
+*.log
+.DS_Store
