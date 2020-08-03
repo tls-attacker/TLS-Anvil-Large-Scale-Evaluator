@@ -29,26 +29,38 @@ public class Evaluator {
         this.executor = new ThreadPoolExecutor(size, size, 10, TimeUnit.DAYS, new LinkedBlockingDeque<Runnable>());
     }
 
+    private void submit(List<Future<?>> futures, EvaluationTask task) {
+        if (futures.size() > 0) {
+            try {
+                Thread.sleep(80 * 1000);
+            } catch (Exception ignored) {
+            }
+        }
+
+        futures.add(executor.submit(task));
+    }
+
 
     public void start() {
         List<Future<?>> futures = new ArrayList<>();
+
+        ProgressTracker.getInstance().setTotalTasks(clientImages.size() + serverImages.size());
+        LOGGER.info(String.format("Starting %d tasks", ProgressTracker.getInstance().getTotalTasks()));
 
         for (Image i : clientImages) {
             EvaluationTask task = EvaluationTaskFactory.forMode(ImplementationModeType.CLIENT);
             task.setImageToEvaluate(i);
             LOGGER.debug("Schedule test for image " + i.repoTags().get(0));
-            futures.add(executor.submit(task));
+            submit(futures, task);
         }
 
         for (Image i : serverImages) {
             EvaluationTask task = EvaluationTaskFactory.forMode(ImplementationModeType.SERVER);
             task.setImageToEvaluate(i);
             LOGGER.debug("Schedule test for image " + i.repoTags().get(0));
-            futures.add(executor.submit(task));
+            submit(futures, task);
         }
 
-        ProgressTracker.getInstance().setTotalTasks(futures.size());
-        LOGGER.info(String.format("Starting %d tasks", futures.size()));
 
         for (Future<?> i : futures) {
             try {
