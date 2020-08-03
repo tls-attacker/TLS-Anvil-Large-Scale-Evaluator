@@ -37,7 +37,9 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                 .hostConfig(HostConfig.builder()
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
-                        .build())
+                        .memory(4 * 1000 * 1000 * 1000L)
+                        .build()
+                )
                 .build(), "Testsuite-" + hostName).id();
     }
 

@@ -32,7 +32,8 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
         return DOCKER.createContainer(ContainerConfig.builder()
                 .image("testsuite:latest")
                 .env("LogFilename=" + imageName)
-                .cmd("-outputFile", "./", "-keylogfile", "./keyfile.log",
+                .cmd("-outputFile", "./",
+                        "-keylogfile", "./keyfile.log",
                         "-parallel", "1",
                         "-timeoutActionScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/shutdown",
                         "server",
@@ -41,6 +42,7 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                 .hostConfig(HostConfig.builder()
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
+                        .memory(4 * 1000 * 1000 * 1000L)
                         .build())
                 .build(), "Testsuite-" + hostName).id();
     }
