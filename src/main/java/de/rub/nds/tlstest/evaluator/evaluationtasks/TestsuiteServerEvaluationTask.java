@@ -43,6 +43,7 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
                         .memory(4 * 1000 * 1000 * 1000L)
+                        .nanoCpus(1000000000L * 4)
                         .build())
                 .build(), "Testsuite-" + hostName).id();
     }
