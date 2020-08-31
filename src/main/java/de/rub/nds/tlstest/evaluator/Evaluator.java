@@ -73,5 +73,6 @@ public class Evaluator {
         LOGGER.info("Evaluator finished");
         executor.shutdownNow();
         ProgressTracker.getInstance().createReport();
+        System.exit(0);
     }
 }
