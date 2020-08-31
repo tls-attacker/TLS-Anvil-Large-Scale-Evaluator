@@ -33,7 +33,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                         "-keylogfile", "./keyfile.log",
                         "client",
                         "-port", "443",
-                        "-wakeupScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger")
+                        "-triggerScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger")
                 .hostConfig(HostConfig.builder()
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
