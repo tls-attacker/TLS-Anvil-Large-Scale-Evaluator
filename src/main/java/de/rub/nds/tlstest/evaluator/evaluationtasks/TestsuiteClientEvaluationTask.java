@@ -40,6 +40,8 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                 .env("LogFilename=" + imageName)
                 .cmd("-outputFile", "./",
                         "-keylogfile", "./keyfile.log",
+                        "-parallelHandshakes", "3",
+                        "-parallelTests", "3",
                         "client",
                         "-port", "443",
                         "-triggerScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger")
@@ -47,7 +49,6 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
                         .memory(4 * 1000 * 1000 * 1000L)
-                        .nanoCpus(1000000000L * 4)
                         .build()
                 )
                 .build(), "Testsuite-" + hostName).id();

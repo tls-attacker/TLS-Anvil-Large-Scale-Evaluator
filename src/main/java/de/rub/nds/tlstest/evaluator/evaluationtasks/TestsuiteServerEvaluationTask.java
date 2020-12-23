@@ -43,7 +43,8 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                 .env("LogFilename=" + imageName)
                 .cmd("-outputFile", "./",
                         "-keylogfile", "./keyfile.log",
-                        "-parallel", "1",
+                        "-parallelHandshakes", "1",
+                        "-parallelTests", "3",
                         "-timeoutActionScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/shutdown",
                         "server",
                         "-connect", targetHostname + ":" + targetPort,
