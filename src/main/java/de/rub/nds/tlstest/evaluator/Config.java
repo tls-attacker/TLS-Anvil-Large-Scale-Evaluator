@@ -54,6 +54,9 @@ public class Config {
 
     @Parameter(names = {"-e", "--evaluator"}, description = "Evaluator that should be used", required = true, converter = EvaluationTaskTypeConverter.class)
     private EvaluationTaskType evaluator = null;
+    
+    @Parameter(names = {"-s", "--strength"}, description = "Strength of the pairwise test to be used by each Testsuite", required = true)
+    private int strength = 4;
 
     private Date launchDate = new Date();
 
@@ -121,5 +124,13 @@ public class Config {
             }
             return convertedValue;
         }
+    }
+
+    public int getStrength() {
+        return strength;
+    }
+
+    public void setStrength(int strength) {
+        this.strength = strength;
     }
 }

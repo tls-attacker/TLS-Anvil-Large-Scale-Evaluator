@@ -45,6 +45,7 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                         "-keylogfile", "./keyfile.log",
                         "-parallelHandshakes", "1",
                         "-parallelTests", "3",
+                        "-strength", Integer.toString(Config.getInstance().getStrength()),
                         "-timeoutActionScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/shutdown",
                         "server",
                         "-connect", targetHostname + ":" + targetPort,
@@ -52,7 +53,7 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                 .hostConfig(HostConfig.builder()
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
-                        .memory(4 * 1000 * 1000 * 1000L)
+                        .memory(8 * 1000 * 1000 * 1000L)
                         .nanoCpus(1000000000L * 4)
                         .build())
                 .build(), "Testsuite-" + hostName).id();

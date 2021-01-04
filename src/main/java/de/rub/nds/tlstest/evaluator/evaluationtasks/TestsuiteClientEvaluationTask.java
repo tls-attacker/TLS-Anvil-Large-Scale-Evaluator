@@ -42,6 +42,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                         "-keylogfile", "./keyfile.log",
                         "-parallelHandshakes", "3",
                         "-parallelTests", "3",
+                        "-strength", Integer.toString(Config.getInstance().getStrength()),
                         "client",
                         "-port", "443",
                         "-triggerScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger")
