@@ -39,7 +39,7 @@ public class Evaluator {
     }
 
     private void submit(List<Future<?>> futures, EvaluationTask task) {
-        if (futures.size() > 0) {
+        if (futures.size() > 0 && !Config.getInstance().isNoRampUpTime()) {
             try {
                 Thread.sleep(80 * 1000);
             } catch (Exception ignored) {

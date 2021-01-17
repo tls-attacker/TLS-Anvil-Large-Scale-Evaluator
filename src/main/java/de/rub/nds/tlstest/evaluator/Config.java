@@ -58,6 +58,9 @@ public class Config {
     @Parameter(names = {"-s", "--strength"}, description = "Strength of the pairwise test to be used by each Testsuite", required = true)
     private int strength = 4;
 
+    @Parameter(names = {"--noRampUpTime"}, description = "Does not wait between starting tasks")
+    private boolean noRampUpTime = false;
+
     private Date launchDate = new Date();
 
     private String outputFolder = FileSystems.getDefault().getPath("./output/" + new SimpleDateFormat("dd-MM-yy'T'HHmmss").format(launchDate))
@@ -97,6 +100,10 @@ public class Config {
 
     public void setOutputFolder(String outputFolder) {
         this.outputFolder = outputFolder;
+    }
+
+    public boolean isNoRampUpTime() {
+        return noRampUpTime;
     }
 
 

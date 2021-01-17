@@ -23,6 +23,15 @@ public class EvaluationTaskFactory {
                     case CLIENT:
                         return new TestsuiteClientEvaluationTask();
                 }
+                break;
+            case FUNCTIONINGTEST:
+                switch (role) {
+                    case SERVER:
+                        return new FunctioningServerTest();
+                    case CLIENT:
+                        throw new UnsupportedOperationException("Not available yet");
+                }
+                break;
         }
 
         throw new UnsupportedOperationException("EvaluationTaskType or ConnectionRole not known");

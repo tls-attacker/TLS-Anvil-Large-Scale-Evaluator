@@ -10,7 +10,8 @@
 package de.rub.nds.tlstest.evaluator.constants;
 
 public enum EvaluationTaskType {
-    TESTSUITE;
+    TESTSUITE,
+    FUNCTIONINGTEST;
 
     public static EvaluationTaskType fromString(String input) {
         for (EvaluationTaskType output : EvaluationTaskType.values()) {
