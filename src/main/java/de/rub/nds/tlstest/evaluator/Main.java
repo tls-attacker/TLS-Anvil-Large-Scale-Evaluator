@@ -23,6 +23,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Main {
@@ -66,7 +68,9 @@ public class Main {
                     versionRegexIndex = config.getVersions().size() - 1;
                 }
                 String versionRegex = config.getVersions().get(versionRegexIndex).replaceAll("\\.", "\\\\.");
-                if (!version.matches(versionRegex)) {
+                Pattern p = Pattern.compile(versionRegex);
+                Matcher m = p.matcher(version);
+                if (!m.find()) {
                     return false;
                 }
             }
