@@ -58,7 +58,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
 
     private DockerTlsInstance createTargetContainer(String ipAddress, String testsuiteContainerId) {
         String connectAddressToUse = ipAddress;
-        if(imageImplementation == TlsImplementationType.TLSLITE_NG) {
+        if(imageImplementation == TlsImplementationType.TLSLITE_NG || imageImplementation == TlsImplementationType.RUSTLS) {
             connectAddressToUse = testsuiteContainerId.substring(0, 12);
         }
         DockerTlsInstance targetInstance = (DockerTlsInstance)dockermanager.getTlsClient(imageImplementation, imageVersion, connectAddressToUse, 443);
@@ -66,9 +66,6 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
         targetInstance.setName(targetHostname);
 
         ContainerConfig targetConfig = targetInstance.getContainerConfig();
-        if (targetInstance.getImage().labels().get("tls_implementation").equals("rustls")) {
-            targetInstance.getHostInfo().setHostname("Testsuite-" + hostName);
-        }
 
         HostConfig hostConfig = targetConfig.hostConfig();
         if (hostConfig == null)
