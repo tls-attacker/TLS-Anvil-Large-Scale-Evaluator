@@ -13,6 +13,7 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerExit;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.NetworkConfig;
+import de.rub.nds.tls.subject.TlsImplementationType;
 import de.rub.nds.tls.subject.docker.DockerTlsInstance;
 import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
@@ -55,8 +56,12 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                 .build(), "Testsuite-" + hostName).id();
     }
 
-    private DockerTlsInstance createTargetContainer(String ipAddress) {
-        DockerTlsInstance targetInstance = (DockerTlsInstance)dockermanager.getTlsClient(imageImplementation, imageVersion, ipAddress, 443);
+    private DockerTlsInstance createTargetContainer(String ipAddress, String testsuiteContainerId) {
+        String connectAddressToUse = ipAddress;
+        if(imageImplementation == TlsImplementationType.TLSLITE_NG) {
+            connectAddressToUse = testsuiteContainerId.substring(0, 12);
+        }
+        DockerTlsInstance targetInstance = (DockerTlsInstance)dockermanager.getTlsClient(imageImplementation, imageVersion, connectAddressToUse, 443);
         targetInstance.setInsecureConnection(true);
         targetInstance.setName(targetHostname);
 
@@ -96,7 +101,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
         LOGGER.debug("Testsuite_" + imageName + " container started!");
 
         String testsuiteIp = DOCKER.inspectContainer(testsuiteContainerId).networkSettings().networks().get(networkName).ipAddress();
-        DockerTlsInstance targetInstance = createTargetContainer(testsuiteIp);
+        DockerTlsInstance targetInstance = createTargetContainer(testsuiteIp, testsuiteContainerId);
         cleanupService.addEntityToCleanUp(DockerEntity.CONTAINER, targetInstance.getId());
         targetInstance.start();
 
