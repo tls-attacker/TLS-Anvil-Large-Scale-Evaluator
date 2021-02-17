@@ -57,6 +57,9 @@ public class Config {
     
     @Parameter(names = {"-s", "--strength"}, description = "Strength of the pairwise test to be used by each Testsuite", required = true)
     private int strength = 4;
+    
+    @Parameter(names = {"-r", "--restart"}, description = "Set the number of handshakes before the target server should be restarted (0 = never)")
+    private int restartServerAfter = 0;
 
     @Parameter(names = {"--noRampUpTime"}, description = "Does not wait between starting tasks")
     private boolean noRampUpTime = false;
@@ -139,5 +142,13 @@ public class Config {
 
     public void setStrength(int strength) {
         this.strength = strength;
+    }
+
+    public int getRestartServerAfter() {
+        return restartServerAfter;
+    }
+
+    public void setRestartServerAfter(int restartServerAfter) {
+        this.restartServerAfter = restartServerAfter;
     }
 }

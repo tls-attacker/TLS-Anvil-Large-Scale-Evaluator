@@ -14,6 +14,7 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerExit;
 import com.spotify.docker.client.messages.HostConfig;
 import com.spotify.docker.client.messages.NetworkConfig;
+import de.rub.nds.tls.subject.TlsImplementationType;
 import de.rub.nds.tls.subject.docker.DockerTlsInstance;
 import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
@@ -37,9 +38,15 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
 
     private String createTestsuiteContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
-
+        
+        String image = "testsuite:latest";
+        if(imageImplementation == TlsImplementationType.MATRIXSSL || imageImplementation == TlsImplementationType.WOLFSSL || imageImplementation == TlsImplementationType.TLSLITE_NG) {
+            image = image + "-" + imageImplementation;
+            LOGGER.info("Using modified Testsuite container for " + imageImplementation);
+        }
+        
         return DOCKER.createContainer(ContainerConfig.builder()
-                .image("testsuite:latest")
+                .image(image)
                 .env("LogFilename=" + imageName)
                 .cmd("-outputFile", "./",
                         "-keylogfile", "./keyfile.log",
@@ -47,14 +54,15 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                         "-parallelTests", "3",
                         "-strength", Integer.toString(Config.getInstance().getStrength()),
                         "-timeoutActionScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/shutdown",
+                        "-restartServerAfter", Integer.toString(Config.getInstance().getRestartServerAfter()),
                         "server",
                         "-connect", targetHostname + ":" + targetPort,
                         "-doNotSendSNIExtension")
                 .hostConfig(HostConfig.builder()
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
-                        .memory(8 * 1000 * 1000 * 1000L)
-                        .nanoCpus(1000000000L * 4)
+                        .memory(15 * 1000 * 1000 * 1000L) 
+                        .nanoCpus(1000000000L * 16)
                         .build())
                 .build(), "Testsuite-" + hostName).id();
     }
