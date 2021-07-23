@@ -48,6 +48,10 @@ public class Main {
                 && config.getVersions().size() != config.getImplementations().size()) {
             LOGGER.warn("Implementations and versions differ in size");
         }
+        
+        if(config.getContainerRAM() > 200) {
+            LOGGER.warn("Container RAM should be given in GB - limit is very high: " + config.getContainerRAM());
+        }
 
         List<Image> images = factory.getAllImages().parallelStream().filter(i -> {
             TlsImplementationType implementation = TlsImplementationType.fromString(i.labels().get(TlsImageLabels.IMPLEMENTATION.getLabelName()));

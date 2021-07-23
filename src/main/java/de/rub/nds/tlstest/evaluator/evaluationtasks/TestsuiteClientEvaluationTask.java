@@ -50,7 +50,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                 .hostConfig(HostConfig.builder()
                         .networkMode(networkId)
                         .appendBinds(mountPath + ":/output")
-                        .memory(8 * 1000 * 1000 * 1000L)
+                        .memory(Config.getInstance().getContainerRAM() * 1000 * 1000 * 1000L) //115 für UPB, 54 für VM2, 15 für OpenSSL alleine
                         .build()
                 )
                 .build(), "Testsuite-" + hostName).id();
@@ -115,7 +115,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
         ContainerExit exit = DOCKER.waitContainer(testsuiteContainerId);
 
         int exitCode = exit.statusCode().intValue();
-        LOGGER.info("Testsuite for " + imageName + " finishd and exited with status code " + exitCode);
+        LOGGER.info("Testsuite for " + imageName + " finished and exited with status code " + exitCode);
         return exitCode;
     }
 }

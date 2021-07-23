@@ -60,6 +60,9 @@ public class Config {
     
     @Parameter(names = {"-r", "--restart"}, description = "Set the number of handshakes before the target server should be restarted (0 = never)")
     private int restartServerAfter = 0;
+    
+    @Parameter(names = "--ram", description = "Set the maximum RAM used for each Docker container in GB")
+    private int containerRAM = 25;
 
     @Parameter(names = {"--noRampUpTime"}, description = "Does not wait between starting tasks")
     private boolean noRampUpTime = false;
@@ -150,5 +153,13 @@ public class Config {
 
     public void setRestartServerAfter(int restartServerAfter) {
         this.restartServerAfter = restartServerAfter;
+    }
+
+    public int getContainerRAM() {
+        return containerRAM;
+    }
+
+    public void setContainerRAM(int containerRAM) {
+        this.containerRAM = containerRAM;
     }
 }
