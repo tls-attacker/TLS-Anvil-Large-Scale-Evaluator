@@ -9,37 +9,38 @@
  */
 package de.rub.nds.tlstest.evaluator.evaluationtasks;
 
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerExit;
-import com.spotify.docker.client.messages.HostConfig;
-import com.spotify.docker.client.messages.NetworkConfig;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.DockerException;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Volume;
 import de.rub.nds.tls.subject.TlsImplementationType;
+import de.rub.nds.tls.subject.docker.DockerTlsClientInstance;
 import de.rub.nds.tls.subject.docker.DockerTlsInstance;
+import de.rub.nds.tls.subject.docker.DockerTlsManagerFactory;
 import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
 
 import java.nio.file.FileSystems;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class TestsuiteClientEvaluationTask extends EvaluationTask {
     private String networkId;
     private String targetHostname;
 
     private String createNetwork(String networkName) throws Exception {
-        return DOCKER.createNetwork(NetworkConfig.builder()
-                .attachable(true)
-                .name(networkName)
-                .build()).id();
+        return DOCKER.createNetworkCmd()
+                .withAttachable(true)
+                .withName(networkName)
+                .exec().getId();
     }
 
     private String createTestsuiteContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
-
-        return DOCKER.createContainer(ContainerConfig.builder()
-                .image("testsuite:latest")
-                .env("LogFilename=" + imageName)
-                .cmd("-outputFile", "./",
+        Volume volume = new Volume("/output");
+        return DOCKER.createContainerCmd("testsuite:latest")
+                .withName("Testsuite-" + hostName)
+                .withEnv("LogFilename=" + imageName)
+                .withCmd("-outputFile", "./",
                         "-keylogfile", "./keyfile.log",
                         "-parallelHandshakes", "3",
                         "-parallelTests", "3",
@@ -47,13 +48,10 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                         "client",
                         "-port", "443",
                         "-triggerScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger")
-                .hostConfig(HostConfig.builder()
-                        .networkMode(networkId)
-                        .appendBinds(mountPath + ":/output")
-                        .memory(Config.getInstance().getContainerRAM() * 1000 * 1000 * 1000L) //115 für UPB, 54 für VM2, 15 für OpenSSL alleine
-                        .build()
-                )
-                .build(), "Testsuite-" + hostName).id();
+                .withHostConfig(HostConfig.newHostConfig()
+                        .withNetworkMode(networkId)
+                        .withBinds(new Bind(mountPath, volume))
+                        .withMemory(Config.getInstance().getContainerRAM() * 1000 * 1000 * 1000L)).exec().getId();
     }
 
     private DockerTlsInstance createTargetContainer(String ipAddress, String testsuiteContainerId) {
@@ -61,27 +59,25 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
         if(imageImplementation == TlsImplementationType.TLSLITE_NG || imageImplementation == TlsImplementationType.RUSTLS) {
             connectAddressToUse = testsuiteContainerId.substring(0, 12);
         }
-        DockerTlsInstance targetInstance = (DockerTlsInstance)dockermanager.getTlsClient(imageImplementation, imageVersion, connectAddressToUse, 443);
-        targetInstance.setInsecureConnection(true);
-        targetInstance.setName(targetHostname);
-
-        ContainerConfig targetConfig = targetInstance.getContainerConfig();
-
-        HostConfig hostConfig = targetConfig.hostConfig();
-        if (hostConfig == null)
-            hostConfig = HostConfig.builder().build();
-
-        targetInstance.setContainerConfig(targetConfig.toBuilder()
-                .hostConfig(hostConfig.toBuilder()
-                        .extraHosts()
-                        .networkMode(networkId)
-                        .build())
-                .exposedPorts()
-                .build()
-        );
-
-        targetInstance.createContainer();
-        return targetInstance;
+        DockerTlsClientInstance dockerClientInstance = null;
+        try {
+            dockerClientInstance = DockerTlsManagerFactory.getTlsClientBuilder(imageImplementation, imageVersion)
+                    .ip(connectAddressToUse)
+                    .port(443)
+                    .insecureConnection(true)
+                    .hostname(targetHostname)
+                    .hostConfigHook(hostConfig -> {
+                        hostConfig
+                                .withExtraHosts()
+                                .withNetworkMode(networkId);
+                        
+                        return hostConfig;
+                    }).build();
+            dockerClientInstance.ensureContainerExists();
+        } catch (DockerException | InterruptedException ex) {
+            LOGGER.error(ex);
+        }
+        return dockerClientInstance;
     }
 
     @Override
@@ -94,10 +90,10 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
 
         String testsuiteContainerId = createTestsuiteContainer();
         cleanupService.addEntityToCleanUp(DockerEntity.CONTAINER, testsuiteContainerId);
-        DOCKER.startContainer(testsuiteContainerId);
+        DOCKER.startContainerCmd(testsuiteContainerId).exec();
         LOGGER.debug("Testsuite_" + imageName + " container started!");
 
-        String testsuiteIp = DOCKER.inspectContainer(testsuiteContainerId).networkSettings().networks().get(networkName).ipAddress();
+        String testsuiteIp = DOCKER.inspectContainerCmd(testsuiteContainerId).exec().getNetworkSettings().getNetworks().get(networkName).getIpAddress();
         DockerTlsInstance targetInstance = createTargetContainer(testsuiteIp, testsuiteContainerId);
         cleanupService.addEntityToCleanUp(DockerEntity.CONTAINER, targetInstance.getId());
         targetInstance.start();
@@ -112,9 +108,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
             }
         }).start();
 
-        ContainerExit exit = DOCKER.waitContainer(testsuiteContainerId);
-
-        int exitCode = exit.statusCode().intValue();
+        int exitCode = DOCKER.waitContainerCmd(testsuiteContainerId).exec(new WaitContainerResultCallback()).awaitStatusCode();
         LOGGER.info("Testsuite for " + imageName + " finished and exited with status code " + exitCode);
         return exitCode;
     }

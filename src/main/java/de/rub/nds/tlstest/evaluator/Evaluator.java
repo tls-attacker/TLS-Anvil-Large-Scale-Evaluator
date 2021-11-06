@@ -9,7 +9,7 @@
  */
 package de.rub.nds.tlstest.evaluator;
 
-import com.spotify.docker.client.messages.Image;
+import com.github.dockerjava.api.model.Image;
 import de.rub.nds.tlstest.evaluator.constants.ImplementationModeType;
 import de.rub.nds.tlstest.evaluator.evaluationtasks.EvaluationTask;
 import de.rub.nds.tlstest.evaluator.evaluationtasks.EvaluationTaskFactory;
@@ -56,17 +56,17 @@ public class Evaluator {
         ProgressTracker.getInstance().setTotalTasks(clientImages.size() + serverImages.size());
         LOGGER.info(String.format("Starting %d tasks", ProgressTracker.getInstance().getTotalTasks()));
 
-        for (Image i : clientImages) {
+        for (Image image : clientImages) {
             EvaluationTask task = EvaluationTaskFactory.forMode(ImplementationModeType.CLIENT);
-            task.setImageToEvaluate(i);
-            LOGGER.debug("Schedule test for image " + i.repoTags().get(0));
+            task.setImageToEvaluate(image);
+            LOGGER.debug("Schedule test for image " + image.getRepoTags()[0]);
             submit(futures, task);
         }
 
-        for (Image i : serverImages) {
+        for (Image image : serverImages) {
             EvaluationTask task = EvaluationTaskFactory.forMode(ImplementationModeType.SERVER);
-            task.setImageToEvaluate(i);
-            LOGGER.debug("Schedule test for image " + i.repoTags().get(0));
+            task.setImageToEvaluate(image);
+            LOGGER.debug("Schedule test for image " + image.getRepoTags()[0]);
             submit(futures, task);
         }
 

@@ -9,8 +9,8 @@
  */
 package de.rub.nds.tlstest.evaluator;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
+import com.github.dockerjava.api.DockerClient;
+import de.rub.nds.tls.subject.docker.DockerClientManager;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ import java.util.List;
 
 public class DockerCleanupService {
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final DockerClient DOCKER = new DefaultDockerClient("unix:///var/run/docker.sock");
+    protected static final DockerClient DOCKER = DockerClientManager.getDockerClient();
 
     private final List<EntityHolder> entitiesToCleanUp = new ArrayList<>();
 
@@ -36,13 +36,13 @@ public class DockerCleanupService {
             try {
                 switch (i.entity) {
                     case IMAGE:
-                        DOCKER.removeImage(i.entityId, true, false);
+                        DOCKER.removeImageCmd(i.entityId).withForce(true).withNoPrune(false).exec();
                         break;
                     case NETWORK:
-                        DOCKER.removeNetwork(i.entityId);
+                        DOCKER.removeNetworkCmd(i.entityId).exec();
                         break;
                     case CONTAINER:
-                        DOCKER.removeContainer(i.entityId, DockerClient.RemoveContainerParam.forceKill());
+                        DOCKER.removeContainerCmd(i.entityId).withForce(true).exec();
                         break;
                 }
             } catch (Exception e) {

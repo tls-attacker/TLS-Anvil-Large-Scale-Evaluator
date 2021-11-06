@@ -1,15 +1,24 @@
 package de.rub.nds.tlstest.evaluator.evaluationtasks;
 
-import com.spotify.docker.client.messages.ContainerConfig;
-import com.spotify.docker.client.messages.ContainerExit;
-import com.spotify.docker.client.messages.HostConfig;
-import com.spotify.docker.client.messages.NetworkConfig;
+import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.DockerException;
+import com.github.dockerjava.api.model.Bind;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.Volume;
+import de.rub.nds.tls.subject.ConnectionRole;
 import de.rub.nds.tls.subject.docker.DockerTlsInstance;
+import de.rub.nds.tls.subject.docker.DockerTlsManagerFactory;
+import de.rub.nds.tls.subject.docker.DockerTlsServerInstance;
 import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
+import static de.rub.nds.tlstest.evaluator.evaluationtasks.EvaluationTask.DOCKER;
+import static de.rub.nds.tlstest.evaluator.evaluationtasks.EvaluationTask.LOGGER;
 
 import java.nio.file.FileSystems;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FunctioningServerTest extends EvaluationTask {
     private String networkName;
@@ -18,53 +27,38 @@ public class FunctioningServerTest extends EvaluationTask {
     private String targetPort;
 
     private String createNetwork() throws Exception {
-        return DOCKER.createNetwork(NetworkConfig.builder()
-                .attachable(true)
-                .name(networkName)
-                .build()).id();
+        return DOCKER.createNetworkCmd()
+                .withAttachable(true)
+                .withName(networkName)
+                .exec().getId();
     }
 
     private String createTestClientContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
-
-        return DOCKER.createContainer(ContainerConfig.builder()
-                .image("basic-client:latest")
-                .env("TARGET=" + targetHostname)
-                .cmd("-keylogfile", "./keyfile.log",
-                        "-connect", targetHostname + ":" + targetPort
-                )
-                .hostConfig(HostConfig.builder()
-                        .networkMode(networkId)
-                        .appendBinds(mountPath + ":/output")
-                        .build())
-                .build(), "BasicClient-" + hostName).id();
+        Volume volume = new Volume("/output");
+        return DOCKER.createContainerCmd("basic-client:latest")
+                .withEnv("TARGET=" + targetHostname)
+                .withCmd("-keylogfile", "./keyfile.log",
+                        "-connect", targetHostname + ":" + targetPort)
+                .withHostConfig(HostConfig.newHostConfig()
+                        .withNetworkMode(networkId)
+                        .withBinds(new Bind(mountPath, volume)))
+                .withName("BasicClient-" + hostName).exec().getId();
     }
 
     private DockerTlsInstance createTargetContainer() {
-        DockerTlsInstance targetInstance = (DockerTlsInstance)dockermanager.getTlsServer(imageImplementation, imageVersion, 4433);
-        targetInstance.setName(targetHostname);
-        targetInstance.getHostInfo().setHostname("0.0.0.0");
-        targetInstance.getHostInfo().setIp("0.0.0.0");
-        targetInstance.setParallelize(true);
-
-        targetPort = targetInstance.getImageProperties().getInternalPort().toString();
-
-        ContainerConfig targetConfig = targetInstance.getContainerConfig();
-        HostConfig hostConfig = targetConfig.hostConfig();
-        if (hostConfig == null)
-            hostConfig = HostConfig.builder().build();
-
-        targetInstance.setContainerConfig(targetConfig.toBuilder()
-                .hostConfig(hostConfig.toBuilder()
-                        .portBindings(new HashMap<>())
-                        .networkMode(networkId)
-                        .build())
-                .exposedPorts()
-                .build()
-        );
-
-        targetInstance.createContainer();
-        return targetInstance;
+        try {
+            DockerTlsManagerFactory.TlsServerInstanceBuilder targetInstanceBuilder = DockerTlsManagerFactory.getTlsServerBuilder(imageImplementation, imageVersion);
+            DockerTlsServerInstance targetInstance = targetInstanceBuilder.containerName(targetHostname).port(4433).hostname("0.0.0.0").ip("0.0.0.0").parallelize(true)
+                    .hostConfigHook(hostConfig -> {
+                        hostConfig.withPortBindings(new LinkedList<>()).withNetworkMode(networkId);
+                        return hostConfig;
+                    }).build();
+            targetPort = DockerTlsManagerFactory.retrieveImageProperties(ConnectionRole.SERVER, imageImplementation).getInternalPort().toString();
+            return targetInstance;
+        } catch (DockerException | InterruptedException ex) {
+            throw new RuntimeException("Failed to create test target container");
+        }
     }
 
     @Override
@@ -78,7 +72,7 @@ public class FunctioningServerTest extends EvaluationTask {
         DockerTlsInstance targetInstance = createTargetContainer();
         cleanupService.addEntityToCleanUp(DockerEntity.CONTAINER, targetInstance.getId());
         targetInstance.start();
-        LOGGER.debug(targetInstance.getName() + " container started!");
+        LOGGER.debug(targetInstance.getContainerName() + " container started!");
 
         try {
             Thread.sleep(10000);
@@ -87,13 +81,13 @@ public class FunctioningServerTest extends EvaluationTask {
 
         String testsuiteContainerId = createTestClientContainer();
         cleanupService.addEntityToCleanUp(DockerEntity.CONTAINER, testsuiteContainerId);
-        DOCKER.startContainer(testsuiteContainerId);
+        DOCKER.startContainerCmd(testsuiteContainerId).exec();
 
         new Thread(() -> {
             while (!finished) {
                 try {
-                    if (!DOCKER.inspectContainer(targetInstance.getId()).state().running()) {
-                        DOCKER.startContainer(targetInstance.getId());
+                    if (!DOCKER.inspectContainerCmd(targetInstance.getId()).exec().getState().getRunning()) {
+                        DOCKER.startContainerCmd(targetInstance.getId()).exec();
                     }
                 } catch (Exception e) {
                     LOGGER.warn("DOCKER error...", e);
@@ -115,11 +109,9 @@ public class FunctioningServerTest extends EvaluationTask {
         }).start();
 
         //waitForContainerToFinish(testsuiteContainerId);
-        ContainerExit exit = DOCKER.waitContainer(testsuiteContainerId);
-
-        int exitCode = exit.statusCode().intValue();
+        int exitCode = DOCKER.waitContainerCmd(testsuiteContainerId).exec(new WaitContainerResultCallback()).awaitStatusCode();
         if (exitCode != 0) {
-            LOGGER.error("FunctionTest for " + imageName + " finishd and exited with status code " + exitCode);
+            LOGGER.error("FunctionTest for " + imageName + " finished and exited with status code " + exitCode);
         }
 
         return exitCode;

@@ -9,12 +9,11 @@
  */
 package de.rub.nds.tlstest.evaluator .evaluationtasks;
 
-import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.messages.Image;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.Image;
 import de.rub.nds.tls.subject.TlsImplementationType;
 import de.rub.nds.tls.subject.constants.TlsImageLabels;
-import de.rub.nds.tls.subject.docker.DockerTlsManagerFactory;
+import de.rub.nds.tls.subject.docker.DockerClientManager;
 import de.rub.nds.tlstest.evaluator.DockerCleanupService;
 import de.rub.nds.tlstest.evaluator.ProgressTracker;
 import org.apache.commons.lang.RandomStringUtils;
@@ -26,8 +25,7 @@ import java.util.Map;
 abstract public class EvaluationTask implements Runnable {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected final DockerClient DOCKER = new DefaultDockerClient("unix:///var/run/docker.sock");
-    protected static final DockerTlsManagerFactory dockermanager = new DockerTlsManagerFactory();
+    protected static final DockerClient DOCKER = DockerClientManager.getDockerClient();
     private static final int RANDOM_LENGTH = 5;
 
     protected Image image;
@@ -56,7 +54,7 @@ abstract public class EvaluationTask implements Runnable {
 
     public void setImageToEvaluate(Image image) {
         this.image = image;
-        Map<String, String> labels = image.labels();
+        Map<String, String> labels = image.getLabels();
         imageVersion = labels.get(TlsImageLabels.VERSION.getLabelName());
         String implementation = labels.get(TlsImageLabels.IMPLEMENTATION.getLabelName());
 
@@ -84,7 +82,7 @@ abstract public class EvaluationTask implements Runnable {
         int waitCounter = 0;
         while (!finished) {
             try {
-                boolean isRunning = DOCKER.inspectContainer(id).state().running();
+                boolean isRunning = DOCKER.inspectContainerCmd(id).exec().getState().getRunning();
                 finished = !isRunning;
                 Thread.sleep(5000);
                 waitCounter++;
