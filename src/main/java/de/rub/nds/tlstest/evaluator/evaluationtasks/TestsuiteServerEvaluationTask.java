@@ -67,8 +67,9 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                         .withNetworkMode(networkId)
                         .withBinds(new Bind(mountPath, volume))
                         .withMemory(Config.getInstance().getContainerRAM() * 1000 * 1000 * 1000L)
-                        .withNanoCPUs(1000000000L * 12))
-                        .exec().getId();
+                        //.withNanoCPUs(1000000000L * 12)
+                )
+                .exec().getId();
     }
 
     private DockerTlsInstance createTargetContainer() {

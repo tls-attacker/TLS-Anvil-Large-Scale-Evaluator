@@ -50,7 +50,9 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                 .withHostConfig(HostConfig.newHostConfig()
                         .withNetworkMode(networkId)
                         .withBinds(new Bind(mountPath, volume))
-                        .withMemory(Config.getInstance().getContainerRAM() * 1000 * 1000 * 1000L)).exec().getId();
+                        .withMemory(Config.getInstance().getContainerRAM() * 1000 * 1000 * 1000L)
+                )
+                .exec().getId();
     }
 
     private DockerTlsInstance createTargetContainer(String ipAddress, String testsuiteContainerId) {
