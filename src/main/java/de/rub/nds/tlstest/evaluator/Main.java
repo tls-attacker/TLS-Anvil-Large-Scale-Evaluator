@@ -34,6 +34,7 @@ public class Main {
         try {
             JCommander.newBuilder().addObject(config).build().parse(args);
         } catch (ParameterException E) {
+            LOGGER.error(E);
             JCommander.newBuilder().addObject(config).build().usage();
             return;
         }

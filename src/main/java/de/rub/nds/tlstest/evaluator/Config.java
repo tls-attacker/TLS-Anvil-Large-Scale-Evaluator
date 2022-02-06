@@ -67,6 +67,9 @@ public class Config {
     @Parameter(names = {"--noRampUpTime"}, description = "Does not wait between starting tasks")
     private boolean noRampUpTime = false;
 
+    @Parameter(names = "--testsuiteImage", description = "Name of the Docker image that is used for the testsuite")
+    private String testsuiteImage = "testsuite:latest";
+
     private Date launchDate = new Date();
 
     private String outputFolder = FileSystems.getDefault().getPath("./output/" + new SimpleDateFormat("dd-MM-yy'T'HHmmss").format(launchDate))
@@ -110,6 +113,14 @@ public class Config {
 
     public boolean isNoRampUpTime() {
         return noRampUpTime;
+    }
+
+    public String getTestsuiteImage() {
+        return testsuiteImage;
+    }
+
+    public void setTestsuiteImage(String testsuiteImage) {
+        this.testsuiteImage = testsuiteImage;
     }
 
 

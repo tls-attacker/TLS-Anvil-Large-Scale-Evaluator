@@ -46,7 +46,7 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
     private String createTestsuiteContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
         Volume volume = new Volume("/output");
-        String image = "testsuite:latest";
+        String image = Config.getInstance().getTestsuiteImage();
         if(imageImplementation == TlsImplementationType.MATRIXSSL || imageImplementation == TlsImplementationType.WOLFSSL || imageImplementation == TlsImplementationType.TLSLITE_NG) {
             image = image + "-" + imageImplementation;
             LOGGER.info("Using modified Testsuite container for " + imageImplementation);

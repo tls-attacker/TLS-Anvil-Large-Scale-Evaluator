@@ -37,7 +37,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
     private String createTestsuiteContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
         Volume volume = new Volume("/output");
-        return DOCKER.createContainerCmd("testsuite:latest")
+        return DOCKER.createContainerCmd(Config.getInstance().getTestsuiteImage())
                 .withName("Testsuite-" + hostName)
                 .withEnv("LogFilename=" + imageName)
                 .withCmd("-outputFile", "./",
