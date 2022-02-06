@@ -40,8 +40,7 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
         return DOCKER.createContainerCmd(Config.getInstance().getTestsuiteImage())
                 .withName("Testsuite-" + hostName)
                 .withEnv("LogFilename=" + imageName)
-                .withCmd("-outputFile", "./",
-                        "-keylogfile", "./keyfile.log",
+                .withCmd("-outputFolder", "./",
                         "-parallelHandshakes", "3",
                         "-parallelTests", "3",
                         "-strength", Integer.toString(Config.getInstance().getStrength()),
