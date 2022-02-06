@@ -66,7 +66,8 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
                     .ip(connectAddressToUse)
                     .port(443)
                     .insecureConnection(true)
-                    .hostname(targetHostname)
+                    .hostname("Testsuite-" + hostName)
+                    .containerName(targetHostname)
                     .hostConfigHook(hostConfig -> {
                         hostConfig
                                 .withExtraHosts()
