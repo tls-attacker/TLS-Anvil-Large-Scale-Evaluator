@@ -7,14 +7,30 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>de.rub.nds.tlsattacker</groupId>
-            <artifactId>TLS-Core</artifactId>
-            <version>3.3.1</version>
+            <groupId>de.rub.nds.tlsdockerlib</groupId>
+            <artifactId>TLS-Docker-Library</artifactId>
+            <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>de.rub.nds.tlsattacker</groupId>
-            <artifactId>Attacks</artifactId>
-            <version>3.3.1</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.10.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.beust</groupId>
+            <artifactId>jcommander</artifactId>
+            <version>1.78</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -23,14 +39,30 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.rub.nds.tlsdockerlib</groupId>
-            <artifactId>TLS-Docker-Library</artifactId>
-            <version>2.0</version>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-core</artifactId>
+            <version>3.2.5</version>
         </dependency>
         <dependency>
-            <groupId>de.rub.nds.tlstest</groupId>
-            <artifactId>TLS-Testsuite</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
+            <version>3.2.5</version>
+        </dependency>
+        <dependency> 
+            <groupId>org.reflections</groupId> 
+            <artifactId>reflections</artifactId> 
+            <version>0.9.9-RC1</version> 
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>2.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>2.3.3</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
     <build>
@@ -92,7 +124,7 @@
                 <version>3.0</version>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <header>${main.basedir}/license_header_plain.txt</header>
+                    <header>${basedir}/license_header_plain.txt</header>
                     <strictCheck>true</strictCheck>
                     <includes>
                         <include>src/**/*.java</include>
