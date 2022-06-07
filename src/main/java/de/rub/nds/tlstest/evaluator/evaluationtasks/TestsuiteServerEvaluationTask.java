@@ -47,10 +47,6 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
         Volume volume = new Volume("/output");
         String image = Config.getInstance().getTestsuiteImage();
-        if(imageImplementation == TlsImplementationType.MATRIXSSL || imageImplementation == TlsImplementationType.WOLFSSL || imageImplementation == TlsImplementationType.TLSLITE_NG) {
-            image = image + "-" + imageImplementation;
-            LOGGER.info("Using modified Testsuite container for " + imageImplementation);
-        }
         return DOCKER.createContainerCmd(image)
                 .withName("Testsuite-" + hostName)
                 .withEnv("LogFilename=" + imageName)
