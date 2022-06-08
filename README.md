@@ -17,5 +17,5 @@ mvn install -DskipTests
 
 ## Start the evaluator
 ```shell
-java -jar apps/TLS-Testsuite-Large-Scale-Evaluator.jar
+java -jar apps/TLS-Anvil-Large-Scale-Evaluator.jar
 ```
