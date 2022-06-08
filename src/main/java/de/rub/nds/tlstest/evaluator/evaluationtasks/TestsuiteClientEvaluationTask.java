@@ -18,6 +18,7 @@ import de.rub.nds.tls.subject.TlsImplementationType;
 import de.rub.nds.tls.subject.docker.DockerTlsClientInstance;
 import de.rub.nds.tls.subject.docker.DockerTlsInstance;
 import de.rub.nds.tls.subject.docker.DockerTlsManagerFactory;
+import de.rub.nds.tls.subject.docker.DockerTlsManagerFactory.TlsClientInstanceBuilder;
 import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
 
@@ -62,7 +63,9 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
         }
         DockerTlsClientInstance dockerClientInstance = null;
         try {
-            dockerClientInstance = DockerTlsManagerFactory.getTlsClientBuilder(imageImplementation, imageVersion)
+            TlsClientInstanceBuilder targetInstanceBuilder = DockerTlsManagerFactory.getTlsClientBuilder(imageImplementation, imageVersion);
+            targetInstanceBuilder = addTargetSpecificFlags(targetInstanceBuilder, imageImplementation);
+            dockerClientInstance = targetInstanceBuilder
                     .ip(connectAddressToUse)
                     .port(443)
                     .insecureConnection(true)
@@ -80,6 +83,17 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
             LOGGER.error(ex);
         }
         return dockerClientInstance;
+    }
+    
+    private TlsClientInstanceBuilder addTargetSpecificFlags(TlsClientInstanceBuilder instanceBuilder, TlsImplementationType imageImplementation) {
+        if(imageImplementation == TlsImplementationType.BEARSSL) {
+            instanceBuilder = instanceBuilder.additionalParameters("-sni localhost");
+        } else if(imageImplementation == TlsImplementationType.MATRIXSSL) {
+            instanceBuilder = instanceBuilder.additionalParameters("--tls-supported-versions 3,4 -b 4");
+        } else if(imageImplementation == TlsImplementationType.WOLFSSL) {
+            instanceBuilder = instanceBuilder.additionalParameters("-v d");
+        }
+        return instanceBuilder;
     }
 
     @Override

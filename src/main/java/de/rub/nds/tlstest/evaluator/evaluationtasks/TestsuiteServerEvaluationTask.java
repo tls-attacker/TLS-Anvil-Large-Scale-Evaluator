@@ -72,6 +72,7 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
         
         try {
             TlsServerInstanceBuilder targetInstanceBuilder = DockerTlsManagerFactory.getTlsServerBuilder(imageImplementation, imageVersion);
+            targetInstanceBuilder = addTargetSpecificFlags(targetInstanceBuilder, imageImplementation);
             DockerTlsServerInstance targetInstance = targetInstanceBuilder.containerName(targetHostname).port(4433).hostname("0.0.0.0").ip("0.0.0.0").parallelize(true)
                     .hostConfigHook(hostConfig -> {
                         hostConfig.withPortBindings(new LinkedList<>()).withNetworkMode(networkId);
@@ -83,6 +84,15 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
         } catch (DockerException | InterruptedException ex) {
             throw new RuntimeException("Failed to create target instance");
         }
+    }
+    
+    private TlsServerInstanceBuilder addTargetSpecificFlags(TlsServerInstanceBuilder instanceBuilder, TlsImplementationType imageImplementation) {
+        if(imageImplementation == TlsImplementationType.WOLFSSL) {
+            instanceBuilder = instanceBuilder.additionalParameters("-v d");
+        } else if(imageImplementation == TlsImplementationType.MATRIXSSL) {
+            instanceBuilder = instanceBuilder.additionalParameters("-W 3,4");
+        }
+        return instanceBuilder;
     }
 
     @Override

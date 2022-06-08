@@ -56,7 +56,7 @@ public class Config {
     private EvaluationTaskType evaluator = null;
     
     @Parameter(names = {"-s", "--strength"}, description = "Strength of the pairwise test to be used by each Testsuite", required = true)
-    private int strength = 4;
+    private int strength = 2;
     
     @Parameter(names = {"-r", "--restart"}, description = "Set the number of handshakes before the target server should be restarted (0 = never)")
     private int restartServerAfter = 0;
@@ -68,7 +68,7 @@ public class Config {
     private boolean noRampUpTime = false;
 
     @Parameter(names = "--testsuiteImage", description = "Name of the Docker image that is used for the testsuite")
-    private String testsuiteImage = "testsuite:latest";
+    private String testsuiteImage = "tlsanvil:latest";
 
     private Date launchDate = new Date();
 

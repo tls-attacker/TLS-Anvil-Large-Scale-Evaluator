@@ -82,7 +82,7 @@ public class Main {
 
             return true;
         }).collect(Collectors.toList());
-
+        
         List<Image> clientImages = images.parallelStream().filter(image -> image.getLabels().get(TlsImageLabels.CONNECTION_ROLE.getLabelName()).equals("client")).collect(Collectors.toList());
         List<Image> serverImages = images.parallelStream().filter(image -> image.getLabels().get(TlsImageLabels.CONNECTION_ROLE.getLabelName()).equals("server")).collect(Collectors.toList());
 
