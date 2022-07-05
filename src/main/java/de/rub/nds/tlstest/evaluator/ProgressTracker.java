@@ -66,7 +66,6 @@ public class ProgressTracker {
     public void createReport() {
         ObjectMapper mapper = new ObjectMapper();
         File f = new File(Config.getInstance().getOutputFolder() + "/evaluationResult.json");
-        f.getParentFile().mkdirs();
 
         try {
             f.createNewFile();

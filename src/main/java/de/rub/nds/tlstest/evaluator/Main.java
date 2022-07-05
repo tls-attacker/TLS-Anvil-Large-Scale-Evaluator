@@ -16,6 +16,7 @@ import de.rub.nds.tls.subject.TlsImplementationType;
 import de.rub.nds.tls.subject.constants.TlsImageLabels;
 import de.rub.nds.tls.subject.docker.DockerTlsManagerFactory;
 import de.rub.nds.tlstest.evaluator.constants.ImplementationModeType;
+import java.io.File;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -86,6 +87,8 @@ public class Main {
         List<Image> serverImages = images.parallelStream().filter(image -> image.getLabels().get(TlsImageLabels.CONNECTION_ROLE.getLabelName()).equals("server")).collect(Collectors.toList());
 
         Evaluator evaluator = new Evaluator(clientImages, serverImages);
+        File outputDirectory = new File(config.getOutputFolder());
+        outputDirectory.mkdirs();
         evaluator.start();
     }
 }
