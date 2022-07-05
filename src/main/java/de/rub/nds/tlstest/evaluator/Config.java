@@ -68,7 +68,13 @@ public class Config {
 
     @Parameter(names = "--testsuiteImage", description = "Name of the Docker image that is used for the testsuite")
     private String testsuiteImage = "tlsanvil:latest";
-
+    
+    @Parameter(names = {"-t", "--tags"}, description = "List of specific tagged tests to be used for the evaluation")
+    private String testTags = null;
+    
+    @Parameter(names = "--package", description = "Name of a specific test package to be used for the evaluation")
+    private String testPackage = null;
+    
     private Date launchDate = new Date();
 
     private String outputFolder = FileSystems.getDefault().getPath("./output/" + new SimpleDateFormat("dd-MM-yy'T'HHmmss").format(launchDate))
@@ -171,5 +177,21 @@ public class Config {
 
     public void setContainerRAM(int containerRAM) {
         this.containerRAM = containerRAM;
+    }
+
+    public String getTestTags() {
+        return testTags;
+    }
+
+    public void setTestTags(String testTags) {
+        this.testTags = testTags;
+    }
+
+    public String getTestPackage() {
+        return testPackage;
+    }
+
+    public void setTestPackage(String testPackage) {
+        this.testPackage = testPackage;
     }
 }

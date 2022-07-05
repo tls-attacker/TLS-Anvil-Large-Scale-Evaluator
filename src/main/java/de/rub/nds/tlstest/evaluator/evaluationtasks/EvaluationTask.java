@@ -13,8 +13,12 @@ import com.github.dockerjava.api.model.Image;
 import de.rub.nds.tls.subject.TlsImplementationType;
 import de.rub.nds.tls.subject.constants.TlsImageLabels;
 import de.rub.nds.tls.subject.docker.DockerClientManager;
+import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.DockerCleanupService;
 import de.rub.nds.tlstest.evaluator.ProgressTracker;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,6 +30,7 @@ abstract public class EvaluationTask implements Runnable {
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final DockerClient DOCKER = DockerClientManager.getDockerClient();
     private static final int RANDOM_LENGTH = 5;
+    public final static String VOLUME_PATH = "/output";
 
     protected Image image;
     protected String imageName;
@@ -74,6 +79,19 @@ abstract public class EvaluationTask implements Runnable {
 
     public String getImageName() {
         return imageName;
+    }
+    
+    protected List<String> getFilteredTestCommands() {
+        LinkedList<String> commands = new LinkedList<>();
+        if(Config.getInstance().getTestPackage() != null) {
+            commands.add("-testPackage");
+            commands.add(Config.getInstance().getTestPackage());
+        }
+        if(Config.getInstance().getTestTags() != null) {
+            commands.add("-tags");
+            commands.add(Config.getInstance().getTestTags());
+        }
+        return commands;
     }
 
     public void waitForContainerToFinish(String id) {

@@ -22,6 +22,8 @@ import de.rub.nds.tlstest.evaluator.Config;
 import de.rub.nds.tlstest.evaluator.constants.DockerEntity;
 
 import java.nio.file.FileSystems;
+import java.util.Arrays;
+import java.util.List;
 
 public class TestsuiteClientEvaluationTask extends EvaluationTask {
     private String networkId;
@@ -36,17 +38,19 @@ public class TestsuiteClientEvaluationTask extends EvaluationTask {
 
     private String createTestsuiteContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
-        Volume volume = new Volume("/output");
-        return DOCKER.createContainerCmd(Config.getInstance().getTestsuiteImage())
-                .withName("Testsuite-" + hostName)
-                .withEnv("LogFilename=" + imageName)
-                .withCmd("-outputFolder", "./",
+        Volume volume = new Volume(VOLUME_PATH);
+        List<String> testsuiteCommands = getFilteredTestCommands();
+        testsuiteCommands.addAll(Arrays.asList("-outputFolder", "./",
                         "-parallelHandshakes", "3",
                         "-parallelTests", "3",
                         "-strength", Integer.toString(Config.getInstance().getStrength()),
                         "client",
                         "-port", "443",
-                        "-triggerScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger")
+                        "-triggerScript", "curl", "--connect-timeout", "2", targetHostname + ":8090/trigger"));
+        return DOCKER.createContainerCmd(Config.getInstance().getTestsuiteImage())
+                .withName("Testsuite-" + hostName)
+                .withEnv("LogFilename=" + imageName)
+                .withCmd(testsuiteCommands)
                 .withHostConfig(HostConfig.newHostConfig()
                         .withNetworkMode(networkId)
                         .withBinds(new Bind(mountPath, volume))

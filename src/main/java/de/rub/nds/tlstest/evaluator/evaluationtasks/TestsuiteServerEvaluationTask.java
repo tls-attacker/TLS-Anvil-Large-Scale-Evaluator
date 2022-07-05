@@ -25,8 +25,10 @@ import static de.rub.nds.tlstest.evaluator.evaluationtasks.EvaluationTask.DOCKER
 import static de.rub.nds.tlstest.evaluator.evaluationtasks.EvaluationTask.LOGGER;
 
 import java.nio.file.FileSystems;
+import java.util.Arrays;
 
 import java.util.LinkedList;
+import java.util.List;
 
 
 public class TestsuiteServerEvaluationTask extends EvaluationTask {
@@ -44,12 +46,10 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
 
     private String createTestsuiteContainer() throws Exception {
         String mountPath = FileSystems.getDefault().getPath(Config.getInstance().getOutputFolder() + "/" + imageName).toString();
-        Volume volume = new Volume("/output");
+        Volume volume = new Volume(VOLUME_PATH);
         String image = Config.getInstance().getTestsuiteImage();
-        return DOCKER.createContainerCmd(image)
-                .withName("Testsuite-" + hostName)
-                .withEnv("LogFilename=" + imageName)
-                .withCmd("-outputFolder", "./",
+        List<String> testsuiteCommands = getFilteredTestCommands();
+        testsuiteCommands.addAll(Arrays.asList("-outputFolder", "./",
                         "-parallelHandshakes", "1",
                         "-parallelTests", "3",
                         "-strength", Integer.toString(Config.getInstance().getStrength()),
@@ -57,7 +57,11 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                         "-restartServerAfter", Integer.toString(Config.getInstance().getRestartServerAfter()),
                         "server",
                         "-connect", targetHostname + ":" + targetPort,
-                        "-doNotSendSNIExtension")
+                        "-doNotSendSNIExtension"));
+        return DOCKER.createContainerCmd(image)
+                .withName("Testsuite-" + hostName)
+                .withEnv("LogFilename=" + imageName)
+                .withCmd(testsuiteCommands)
                 .withHostConfig(HostConfig.newHostConfig()
                         .withNetworkMode(networkId)
                         .withBinds(new Bind(mountPath, volume))
