@@ -81,8 +81,9 @@ public class TestsuiteServerEvaluationTask extends EvaluationTask {
                         hostConfig.withPortBindings(new LinkedList<>()).withNetworkMode(networkId);
                         return hostConfig;
                     }).build();
-            targetPort = DockerTlsManagerFactory.retrieveImageProperties(ConnectionRole.SERVER, imageImplementation).getInternalPort().toString();
             targetInstance.ensureContainerExists();
+            targetInstance.updateInstancePort();
+            targetPort = String.valueOf(targetInstance.getPort());
             return targetInstance;
         } catch (DockerException | InterruptedException ex) {
             throw new RuntimeException("Failed to create target instance");
